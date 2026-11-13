@@ -1,0 +1,22 @@
+name = "makers-tools"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[vars]
+# Days are counted in this zone: date-only values are stored at 4 a.m. in the setting user's time zone (London).
+TIME_ZONE = "Europe/London"
+
+# The fixes Forecast delivery and Test a fix propose, kept 14 days under their Fix ref for Apply fix (fixes.js). With
+# no id, the first `wrangler deploy` creates the KV namespace and later deploys keep it; to use one made with
+# `npx wrangler kv namespace create FIXES`, add its id here as `id = "<namespace id>"`.
+[[kv_namespaces]]
+binding = "FIXES"
+
+[triggers]
+# The client figures on the Client cards (jobs.js): Mondays 07:30 London. Cloudflare's cron is UTC, so both are set and
+# the job runs on the one that is 07:30 in London (06:30 UTC in summer, 07:30 UTC in winter).
+crons = ["30 6 * * MON", "30 7 * * MON"]
+
+[observability]
+enabled = true

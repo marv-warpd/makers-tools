@@ -1,0 +1,13 @@
+name = "makers-approval"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+# The writes run in the makers-tools Worker (its Writes entrypoint), so the logic exists once.
+[[services]]
+binding = "MAKERS"
+service = "makers-tools"
+entrypoint = "Writes"
+
+[observability]
+enabled = true

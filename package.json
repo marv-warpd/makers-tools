@@ -1,0 +1,16 @@
+{
+  "name": "makers-tools",
+  "private": true,
+  "type": "module",
+  "description": "The tools server and event service for the Makers Marketing Co. ClickUp workspace",
+  "engines": {
+    "node": ">=26"
+  },
+  "scripts": {
+    "test": "node --test tools-server/test/*.test.mjs",
+    "deploy": "wrangler deploy --config tools-server/wrangler.toml && wrangler deploy --config event-service/wrangler.toml"
+  },
+  "devDependencies": {
+    "wrangler": "4.69.0"
+  }
+}

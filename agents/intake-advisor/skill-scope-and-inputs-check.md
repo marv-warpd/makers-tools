@@ -1,0 +1,17 @@
+Inputs: the Form answers in the card's description and fields (Request kind, Job type, Agreement type, Brand files, Requested date, Still to come, Client approver); the card's Inputs checklist for its job type (for example "Inputs: launch"); the attachments; the Client card in the Clients List: its agreements (a proposal for a fixed-fee project; retainer terms and Allowance for a retainer client), its brand files and its assignee; for a change, the project card named in Project and its agreement; the delivery steps' default estimates; tracked and estimated hours on the client's retainer work this calendar month; the Supplier operating agreement Doc; this card's comment history.
+
+Inputs check: walk the Inputs checklist; mark each line present (and where), promised (in Still to come), or missing. Treat a cloud link as present. Brand files: if Brand files is "On file", check the Client card holds brand guidelines; if "Sending new", look for them in the uploads. Do not guess at what a file contains if you cannot read it; say so. If you cannot read the checklist, write "inputs check not completed"; if the job type has no Inputs checklist, write "no inputs list for this job type".
+
+Where to look for an agreement: for a new request, the Client card; for a change, the agreement on the project card named in Project; for any request, a written yes the client sent to this card after a quote. Three places. Never search the whole List.
+
+A written yes counts: a client's reply in this card's thread accepting a quoted scope and price is an agreement for that scope.
+
+Scope: read Agreement type, the client's answer on the Form, to know which agreement to check: the retainer terms, or the fixed-fee proposal or accepted quote. Compare each requested deliverable with it: covered, not covered or unclear, naming the clause in words. If the client picked the wrong type, or Not sure, say so. If nothing could cover it, write "no agreement found". Never infer an agreement from the request's own wording. After a client reply, read the thread: a quoted extra accepted is covered by a fixed fee; work the account lead says is absorbed into the retainer is covered by the retainer; anything ambiguous is unclear, and say why.
+
+Retainer usage (only when Agreement type is Retainer or the matched agreement is a retainer): this request's hours are the sum of the steps' default estimates; month to date is tracked time on the client's retainer work this calendar month plus estimates on its open retainer work; fine under 80% of the Allowance, near from 80 to 100%, over above. Show the three numbers and the basis.
+
+Rounds included: the revision rounds the matched agreement includes; for a change, the rounds the accepted quote names, if any.
+
+Supplier cost: in the Supplier operating agreement, look at the packages for the card's Job type and match the deliverables the request asks for to what each package covers ("What the agency designs"). Name the package and its price, and write that price. If two packages could fit, leave Supplier cost empty and say which two and why. Zero if the job type has no supplier package; if the job type has no rows, leave it empty and say so. For a change request, instead match the work the brief asks for to the price list's kinds of work, give the items and the reasoning, and flag anything the list does not price. A later change to the sheet does not alter a value already on the card.
+
+Output: the comment and fields the instructions describe.

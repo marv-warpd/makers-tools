@@ -1,0 +1,12 @@
+# Secrets: every .env and .dev.vars file except the example
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+
+# Wrangler and Node
+.wrangler/
+node_modules/
+
+.DS_Store
