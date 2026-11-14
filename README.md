@@ -1,5 +1,83 @@
 # Makers tools
 
+A ClickUp intake, delivery and reporting system with a custom MCP server and supporting services, designed by Martin Johnson. Deployed on Cloudflare Workers: 26 tools (20 reads, 6 bounded writes), two services, 148 automated tests.
+
+Configured for Makers Marketing Co., the system connects client requests and agreed scope to delivery plans, team capacity, project costs and management reporting.
+
+ClickUp holds the work and its history. Custom services calculate schedules and business figures and write back within set limits. AI agents assess requests, prepare handovers and explain results. Account and delivery leads own commercial commitments and delivery decisions.
+
+This repository contains the source code, automated tests, ClickUp configuration records, agent instructions and operating guidance for evaluating, maintaining and extending the system.
+
+## Workflow and architecture
+
+![Workflow and architecture](docs/architecture.png)
+
+[Diagram source (SVG)](docs/architecture.svg)
+
+The workflow runs through ClickUp’s records, review stages and delivery steps. Two Cloudflare Workers provide the custom calculations, bounded writes and scheduled client refresh.
+
+Solid arrows show the workflow and reporting inputs. Dashed arrows show calls between ClickUp and the services. The event service calls shared write functions on the tools server and closes intake stages through the ClickUp API.
+
+Implementation: [automation rules](docs/rules.md), [agent configuration](agents/README.md), [service entrypoints](tools-server/worker.js), [event handling](event-service/worker.js), [weekly refresh](tools-server/jobs.js).
+
+## Design decisions
+
+| Decision | Reasoning |
+|---|---|
+| Move the approved request into Projects as the same task. | The brief, discussion, attachments and delivery steps remain with the work through handover. [Rules](docs/rules.md#intake) |
+| Record the committed date and initial cost forecast at approval. | Later delivery and cost figures can be compared with the recorded starting point. [Fields and definitions](docs/glossary.md) |
+| Use delivery steps with owners, estimates and logged time. | The same underlying work records support capacity planning, cost calculations and reporting by step. [Workspace records](docs/workspace.md), [calculations](docs/tools.md) |
+| Calculate schedules and reporting figures in code; use agents for assessment, summaries and explanation. | Calculations can be tested and reused while agents interpret the request and communicate the result. [Scheduling](docs/scheduling.md), [agents](agents/README.md) |
+| Share integration write functions between the tools server and event service. | Client linking, baseline capture and step-field updates use one implementation. [Service binding](tools-server/worker.js#L36) |
+| Bind recovery approval to a stored proposal and its Fix ref. | Approval identifies exact task IDs and date changes, which are checked against current records before writing. [Stored proposals](tools-server/fixes.js), [Apply fix](tools-server/writes.js#L364) |
+| Prepare supplier briefs in internal staging before release. | Draft content and attachments receive a creative-lead review before entering the supplier’s shared List. [Brief instructions](agents/design-brief-writer/instructions.txt) |
+| Return figures with their calculation basis, timestamp and source references. | A reported result can be traced to the records and calculations behind it. [Result format](docs/tools.md#what-every-result-holds) |
+
+## One request through the system
+
+A new fixed-fee launch request, step by step.
+
+| Step | Owner | Decision | Evidence | Resulting action |
+|---|---|---|---|---|
+| **1. Request arrives** | Requester; account lead receives the request | Identify the requested work, agreement type and requested date. | Form answers, supplied materials and Client record. | The Form creates an Intake task. Rules apply the launch steps and review stages; the linking service connects a uniquely matched Client record and fills empty ownership fields. |
+| **2. Scope review** | Account lead, supported by the Intake Advisor | Is the work covered, and are the required inputs available? | Agreement or accepted quote, inputs checklist, attachments and the Advisor’s assessment. | Gaps are returned for clarification. Once checked, commercial fields and leads are recorded and the request moves to Delivery review. |
+| **3. Delivery review** | Delivery lead, supported by the Delivery Planner | Do the steps, estimates, capacity and proposed date fit the request? | Step estimates, existing bookings, supplier turnaround, calculated plan and Workload view. | The server calculates and writes the first plan. The delivery lead checks it before moving the request to Final review. |
+| **4. Approval and handover** | Account lead; delivery lead receives the job | Are scope, date and commercial terms agreed? | Agreement, requested and feasible dates, forecast cost and budget. | Approval moves the same task into Projects, records the baseline, copies shared fields to its steps and starts the Handover Writer. |
+| **5. Delivery begins** | Delivery lead and assigned step owners | Is the job ready to start, and does each completed step meet its review requirements? | Handover summary, source brief, step instructions, checklists and produced work. | Team-owned steps receive named owners. Work and time are recorded on the steps; completion releases dependent steps as Ready. |
+| **6. Supplier work** | Creative lead and Design Agency | Is the brief ready for release, and are the proof and final files acceptable? | Approved copy, deliverables, source materials, deadline, rounds and submitted files. | The Design Brief Writer drafts in staging. The creative lead checks and releases the brief, reviews the outputs, and returns accepted files to the internal Design step. |
+| **7. Recovery, when proposed** | Delivery lead or workspace owner | Approve the proposed date changes or leave them unapplied. | Forecast, listed moves, Fix ref and current step dates. | An authorised “apply” reply permits the server to write the stored moves after its checks. The server rechecks Health and the Planner posts the confirmation. |
+| **8. Delivery and acceptance** | Studio and account lead | Are the files ready to send, and has written client acceptance been received? | Accepted design files, packaged outputs, internal review and the acceptance recorded on Deliver. | Sending records Delivered on. Written acceptance closes Deliver; completion rules close the project and record Accepted on. |
+| **9. Reporting** | Account lead and leadership | Which delivery, cost or rework findings warrant attention? | Recorded dates, approval baseline, logged hours, rates, fees, supplier costs and rework tags. | The Monday refresh updates Client figures and Account health. Monthly review returns the measures with their source calculations for review. |
+
+The [rules](docs/rules.md), [agent records](agents/README.md), [scheduling reference](docs/scheduling.md) and [tool reference](docs/tools.md) document the automated actions and calculations.
+
+## Ownership and boundaries
+
+| Area | Owner | Responsibility |
+|---|---|---|
+| Services | IT | Maintain the two Workers, credentials, stored fix proposals, schedules and logs; test changes, record deployments and manage rollback. [Operating instructions](#operating-instructions), [deployment record](DEPLOYMENTS.md). |
+| Workspace configuration | Workspace owner | Maintain Lists, statuses, Custom Fields, templates, Teams, automation rules, access and the Makers tools connection. [Workspace configuration](docs/workspace.md), [rules](docs/rules.md). |
+| Agent instructions | Workspace owner; IT for settings shared with the code | Maintain Instructions, Skills, triggers, tools and knowledge in ClickUp, with their text recorded in this repository. Editing a repository file does not update an agent in ClickUp. [Agent configuration](agents/README.md). |
+| Business thresholds | Workspace owner for process changes; IT for code settings | Maintain capacity, planning allowances, project Health and Account health settings. Where a value also appears in a Skill, update both together. [Scheduling settings](docs/scheduling.md#settings), [tool settings](docs/tools.md#settings-in-the-code), [Account health](tools-server/jobs.js). |
+| Supplier access | Workspace owner for permissions; creative lead for release | Keep the Design Agency guest's access scoped to the Design Agency List. Staging and internal project records remain internal; the creative lead checks the brief and attachments before release. [Workspace records](docs/workspace.md), [brief instructions](agents/design-brief-writer/instructions.txt). |
+
+ClickUp permissions control supplier access. The Design Brief Writer's instructions exclude price, budget, rate, hours and commercial terms from its output; the creative lead reviews the material released to the supplier.
+
+## Status and evidence
+
+| | |
+|---|---|
+| Snapshot | 13 November 2026. |
+| Deployment | Mirrors `makers-tools` version `e05f8f85`, deployed on 13 November 2026. The event-service code is unchanged since 5 November 2026; agent text was read from ClickUp on 13 November 2026. |
+| Recorded checks | 148 automated tests complete successfully, including four marked `expectFailure` for known scheduling limits. Both Workers build with a dry run. Live checks cover authentication, tool discovery and approval of a stored fix. [Verification record](#status-of-this-snapshot), [tests and known limits](#tests). |
+| Release history | [DEPLOYMENTS.md](DEPLOYMENTS.md) is the template for deployments made from this repository. |
+| Context | Makers Marketing Co. and its records are a working model rather than a live customer. |
+
+## Operating instructions
+
+<details>
+<summary>Services, configuration, tests, deployment and recovery</summary>
+
 The code and records behind Makers Marketing Co.'s ClickUp workspace. ClickUp holds the work: client requests (the
 Intake List), projects (the Projects List), one task per client (the Clients List), four AI agents and 39 automation
 rules. This document calls a ClickUp task a card, a client's task its Client card, and a subtask of a project a step.
@@ -348,3 +426,5 @@ Each deploy creates a new version of each Worker. `DEPLOYMENTS.md` records them,
 Some numbers appear both in the code and in the Delivery Planner's Skills (the 80% planning cap, the two-day buffer,
 the three-day sign-off allowance, the two-day No owner window, the 10% headroom line). Change both in the same deploy.
 `docs/scheduling.md` lists where each is set.
+
+</details>
